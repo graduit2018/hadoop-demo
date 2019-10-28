@@ -1,8 +1,21 @@
 version: "3"
 services:
+  sqoop:
+    build: ./sqoop
+    image: apache-sqoop:1.4.7
+    container_name: sqoop
+    environment:
+      HADOOP_MAPRED_HOME: /opt/hadoop-3.1.2/
+      HADOOP_COMMON_HOME: /opt/hadoop-3.1.2/
+    env_file:
+      - ./hadoop.env
+    stdin_open: true
+    tty: true
+    command: bash -c "tail -f /dev/null"
+
   mysql:
     image: mysql:5.7
-    container_name: mysql_hdfs
+    container_name: mysql_hadoop_demo
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: sakila
@@ -12,10 +25,10 @@ services:
       - ./data/mysql:/var/lib/mysql
     ports:
       - 3306:3306
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin_hdfs
-    restart: always
+    container_name: phpmyadmin_hadoop_demo
     depends_on:
       - mysql
     ports:
@@ -23,15 +36,101 @@ services:
     volumes:
       - ./data/phpmyadmin/:/sessions
     environment:
-      - PMA_HOSTS=mysql
-  sqoop_server:
-    build: ./sqoop_server_hdfs
-    container_name: sqoop_server_hdfs
+      - PMA_HOSTS=mysql_hadoop_demo
+
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.1.2-java8
+    container_name: namenode
     ports:
-      - 12000:12000
-      - 50070:50070
+      - 9870:9870
+    volumes:
+      - hadoop_namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=test
+    env_file:
+      - ./hadoop.env
+
+  datanode1:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.1.2-java8
+    container_name: datanode1
+    ports:
+      - 9864:9864
+    volumes:
+      - hadoop_datanode1:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    env_file:
+      - ./hadoop.env
+  
+  datanode2:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.1.2-java8
+    container_name: datanode2
+    ports:
+      - 9865:9864
+    volumes:
+      - hadoop_datanode2:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    env_file:
+      - ./hadoop.env
+
+  datanode3:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.1.2-java8
+    container_name: datanode3
+    ports:
+      - 9866:9864
+    volumes:
+      - hadoop_datanode3:/hadoop/dfs/data
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    env_file:
+      - ./hadoop.env
+
+  resourcemanager:
+    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.1.2-java8
+    container_name: resourcemanager
+    ports:
       - 8088:8088
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864"
+    env_file:
+      - ./hadoop.env
+
+  nodemanager1:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.1.2-java8
+    container_name: nodemanager1
+    ports:
       - 8042:8042
-    links:
-      - mysql
-    tty: true
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 resourcemanager:8088"
+    env_file:
+      - ./hadoop.env
+
+  nodemanager2:
+    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.1.2-java8
+    container_name: nodemanager2
+    ports:
+      - 8043:8042
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 resourcemanager:8088"
+    env_file:
+      - ./hadoop.env
+
+  historyserver:
+    image: bde2020/hadoop-historyserver:2.0.0-hadoop3.1.2-java8
+    container_name: historyserver
+    ports:
+      - 8188:8188
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870 datanode1:9864 datanode2:9864 datanode3:9864 resourcemanager:8088"
+    volumes:
+      - hadoop_historyserver:/hadoop/yarn/timeline
+    env_file:
+      - ./hadoop.env
+
+volumes:
+  hadoop_namenode:
+  hadoop_datanode1:
+  hadoop_datanode2:
+  hadoop_datanode3:
+  hadoop_historyserver:

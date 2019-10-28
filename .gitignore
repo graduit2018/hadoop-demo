@@ -1,3 +1,4 @@
 docker-compose.yml
+hadoop.env
 sakila-db
 sakila-db.zip
