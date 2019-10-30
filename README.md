@@ -35,5 +35,4 @@ $ hdfs dfs -copyFromLocal /100MB.bin /demo/100MB.bin
 
 ```
 $ hadoop fsck /demo/100MB.bin -files -blocks -locations
-$ hdfs dfs -cat /user/root/data/test.csv
 ```
