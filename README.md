@@ -2,29 +2,8 @@
 
 ## Run cluster
 ```bash
-docker-compose up
+docker-compose up -d
 ```
-
-## Grant PRIVILEGES
-
-```
-GRANT ALL PRIVILEGES ON sakila.*  TO 'root'@'%';
-CREATE DATABASE sakila
-```
-
-## Import data
-
-```bash
-curl -Lo ./sakila-db.zip http://downloads.mysql.com/docs/sakila-db.zip
-unzip ./sakila-db.zip
-cat sakila-db/sakila-schema.sql | docker exec -i mysql_hdfs mysql -u root --password=root sakila
-cat sakila-db/sakila-data.sql | docker exec -i mysql_hdfs mysql -u root --password=root sakila
-rm -rf unzip sakila-db
-```
-
-## Query
-docker exec -i mysql_hdfs mysql -u root --password=root -e "select film_id, title from sakila.film limit 1"
-
 
 ## Commands
 

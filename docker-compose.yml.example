@@ -1,43 +1,5 @@
 version: "3"
 services:
-  sqoop:
-    build: ./sqoop
-    image: apache-sqoop:1.4.7
-    container_name: sqoop
-    environment:
-      HADOOP_MAPRED_HOME: /opt/hadoop-3.1.2/
-      HADOOP_COMMON_HOME: /opt/hadoop-3.1.2/
-    env_file:
-      - ./hadoop.env
-    stdin_open: true
-    tty: true
-    command: bash -c "tail -f /dev/null"
-
-  mysql:
-    image: mysql:5.7
-    container_name: mysql_hadoop_demo
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: sakila
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
-    volumes:
-      - ./data/mysql:/var/lib/mysql
-    ports:
-      - 3306:3306
-
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin_hadoop_demo
-    depends_on:
-      - mysql
-    ports:
-      - 8097:80
-    volumes:
-      - ./data/phpmyadmin/:/sessions
-    environment:
-      - PMA_HOSTS=mysql_hadoop_demo
-
   namenode:
     image: bde2020/hadoop-namenode:2.0.0-hadoop3.1.2-java8
     container_name: namenode
